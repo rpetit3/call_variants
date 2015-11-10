@@ -4,7 +4,7 @@ Static variables used throughout the analysis pipeline.
 
 Please note, the Makefile should update BASE_DIR, but if not you will need to.
 """
-BASE_DIR = "***CHANGE_ME***"
+BASE_DIR = CHANGE_ME"
 
 # PATH
 PATH = BASE_DIR + '/bin'
@@ -13,7 +13,7 @@ TOOL_DATA = BASE_DIR + '/tool-data'
 
 # Programs
 BIN = {
-    # SNP/InDel related
+    'samtools': THIRD_PARTY_PATH + '/samtools',
     'bwa': THIRD_PARTY_PATH + '/bwa',
     'java': THIRD_PARTY_PATH + '/java',
     'picardtools': '{0}/picard.jar'.format(

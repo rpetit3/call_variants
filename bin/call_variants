@@ -15,6 +15,9 @@ parser.add_argument("reference", metavar="REFERENCE_FASTA",
                     help="Input reference FASTA file.")
 parser.add_argument("genbank", metavar="REFERENCE_GENBANK",
                     help="Input reference GenBank file.")
+parser.add_argument("-o", "--output", dest="output", type=str,
+                    help="Output directory. (Default: ./)", metavar="STR",
+                    default='./')
 parser.add_argument("-r", "--read_length", dest="read_length", type=int,
                     help="Mean read length of input FASTQ file", metavar="INT",
                     default=0)
@@ -26,7 +29,9 @@ parser.add_argument('--log_times', action='store_true', default=False,
                     help='Write task run times to file (Default: STDERR).', )
 options = parser.parse_args()
 
-TIME_LOG = 'logs/call_variants.time' if options.log_times else sys.stderr
+TIME_LOG = sys.stderr
+if options.log_times:
+    TIME_LOG = ''.join([options.output, '/logs/call_variants.time'])
 # Pipeline --------------------------------------------------------------------
 read_length = 0
 if not options.read_length:
@@ -46,18 +51,40 @@ else:
 @active_if(options.log_times)
 def create_dir():
     """ Make logs directory if required. """
-    out, err = shared.run_command(['mkdir', 'logs'])
+    out, err = shared.run_command([
+        'mkdir', ''.join([options.output, '/logs'])
+    ])
 
 
-@mkdir('variants/completed')
-@mkdir('variants/gatk')
-@transform(options.reference, regex(r"(.*)"), r"\1.SOME")
-def build_index(input_file, completed_file):
+@mkdir(''.join([options.output, '/variants/completed']))
+@mkdir(''.join([options.output, '/variants/gatk']))
+@transform(options.reference, regex(r"(.*)"), r"\1.bwt")
+@time_job(TIME_LOG, new_stream=True)
+def build_bwa_index(input_file, completed_file):
     """ Align reads using BWA. """
     variants.bwa_index(options.reference)
 
 
-@time_job(TIME_LOG, new_stream=True)
+@follows(build_bwa_index)
+@transform(options.reference, regex(r"(.*)"), r"\1.fai")
+@time_job(TIME_LOG)
+def build_fasta_index(input_file, completed_file):
+    """ Align reads using BWA. """
+    variants.samtools_faidx(options.reference)
+
+
+@follows(build_fasta_index)
+@transform(options.reference, regex(r"(.*).fasta"), r"\1.dict")
+@time_job(TIME_LOG)
+def build_fasta_dictionary(input_file, completed_file):
+    """ Align reads using BWA. """
+    variants.create_sequence_dictionary(options.reference, completed_file)
+
+
+@follows(build_fasta_dictionary)
+@transform(options.fastq, regex(r"(.*)"),
+           ''.join([options.output, '/', r"variants/completed/bwa.sam"]))
+@time_job(TIME_LOG)
 def bwa(input_file, completed_file):
     """ Align reads using BWA. """
     output_sam = completed_file.replace('completed', 'gatk')
@@ -75,7 +102,8 @@ def bwa(input_file, completed_file):
 
 
 @follows(bwa)
-@transform(bwa, regex(r"(.*)"), r"variants/completed/sorted.bam")
+@transform(bwa, regex(r"(.*)"),
+           ''.join([options.output, '/', r"variants/completed/sorted.bam"]))
 @time_job(TIME_LOG)
 def add_or_replace_read_groups(input_file, completed_file):
     """ Filter out reads. """
@@ -86,7 +114,7 @@ def add_or_replace_read_groups(input_file, completed_file):
 
 @follows(add_or_replace_read_groups)
 @transform(add_or_replace_read_groups, regex(r"(.*)"),
-           r"variants/completed/deduped.bam")
+           ''.join([options.output, '/', r"variants/completed/deduped.bam"]))
 @time_job(TIME_LOG)
 def mark_duplicates(input_file, completed_file):
     """ Build BAM index. """
@@ -103,12 +131,12 @@ def realigner_target_creator(input_file, completed_file):
     deduped_bam = input_file.replace('completed', 'gatk')
     intervals = completed_file.replace('completed', 'gatk')
     variants.realigner_target_creator(deduped_bam, intervals,
-                                      optiona.reference, completed_file)
+                                      options.reference, completed_file)
 
 
 @follows(realigner_target_creator)
 @transform(realigner_target_creator, regex(r"(.*)"),
-           r"variants/completed/realigned.bam")
+           ''.join([options.output, '/', r"variants/completed/realigned.bam"]))
 @time_job(TIME_LOG)
 def indel_realigner(input_file, completed_file):
     """ Check Tauqeer's protocol. """
@@ -120,7 +148,8 @@ def indel_realigner(input_file, completed_file):
 
 
 @follows(indel_realigner)
-@transform(indel_realigner, regex(r"(.*)"), r"variants/completed/raw.vcf")
+@transform(indel_realigner, regex(r"(.*)"),
+           ''.join([options.output, '/', r"variants/completed/raw.vcf"]))
 @time_job(TIME_LOG)
 def haplotype_caller(input_file, completed_file):
     """ Check Tauqeer's protocol. """
@@ -132,7 +161,7 @@ def haplotype_caller(input_file, completed_file):
 
 @follows(haplotype_caller)
 @transform(haplotype_caller, regex(r"(.*)"),
-           r"variants/completed/filtered.vcf")
+           ''.join([options.output, '/', r"variants/completed/filtered.vcf"]))
 @time_job(TIME_LOG)
 def variant_filtration(input_file, completed_file):
     """ Check Tauqeer's protocol. """
@@ -144,7 +173,7 @@ def variant_filtration(input_file, completed_file):
 
 @follows(variant_filtration)
 @transform(variant_filtration, regex(r"(.*)"),
-           r"variants/completed/annotated.vcf")
+           ''.join([options.output, '/', r"variants/completed/annotated.vcf"]))
 @time_job(TIME_LOG)
 def vcf_annotator(input_file, completed_file):
     """ Annotate the variants. """
@@ -160,7 +189,7 @@ def vcf_annotator(input_file, completed_file):
 def move_final_vcf(input_file, completed_file):
     """ Move the final annotated VCF to the root of the project. """
     annotated_vcf = input_file.replace('completed', 'gatk')
-    final_vcf = '{0}.variants.vcf.gz'.format(options.tag)
+    final_vcf = '{0}/{1}.variants.vcf.gz'.format(options.output, options.tag)
     variants.move_final_vcf(annotated_vcf, final_vcf, completed_file)
 
 

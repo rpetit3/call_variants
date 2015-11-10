@@ -1,14 +1,17 @@
-.PHONY: all clean
+.PHONY: all clean test
 TOP_DIR := $(shell pwd)
 THIRD_PARTY := $(TOP_DIR)/src/third-party
 THIRD_PARTY_PYTHON := $(TOP_DIR)/src/third-party/python
 THIRD_PARTY_BIN := $(TOP_DIR)/bin/third-party
-
-all: mkdirs programs python;
+PYTHONPATH := $(TOP_DIR):$(THIRD_PARTY)/python:$(THIRD_PARTY)/python/vcf-annotator:$$PYTHONPATH
+all: mkdirs config programs python;
 
 mkdirs: ;
 	mkdir -p $(THIRD_PARTY)
 	mkdir -p $(THIRD_PARTY_BIN)
+
+config: ;
+	sed -i 's#^BASE_DIR.*#BASE_DIR = "$(TOP_DIR)"#' call_variants/config.py
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
 # Clean up everything.                                                        #
@@ -16,12 +19,14 @@ mkdirs: ;
 clean: ;
 	rm -rf $(THIRD_PARTY)
 	rm -rf $(THIRD_PARTY_BIN)
-	sed -i 's#^BASE_DIR.*#BASE_DIR = "***CHANGE_ME***"#' call_variants/config.py
+	rm -rf test/test_programs
+	rm -rf test/test_pipeline
+	sed -i 's#^BASE_DIR.*#BASE_DIR = CHANGE_ME"#' call_variants/config.py
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
 # Build all the programs required to run the simulations.                     #
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
-programs: mkdirs bwa java picardtools gatk vcfannotator;
+programs: mkdirs bwa java picardtools gatk vcfannotator samtools;
 
 bwa: ;
 	wget -O $(THIRD_PARTY)/bwa-0.7.12.tar.gz https://github.com/lh3/bwa/archive/0.7.12.tar.gz
@@ -49,12 +54,23 @@ vcfannotator: ;
 	git clone git@github.com:rpetit3/vcf-annotator.git $(THIRD_PARTY)/python/vcf-annotator
 	ln -s $(THIRD_PARTY)/python/vcf-annotator/bin/vcf-annotator $(THIRD_PARTY_BIN)/vcf-annotator
 
+samtools: ;
+	wget -P $(THIRD_PARTY) https://github.com/samtools/samtools/releases/download/1.2/samtools-1.2.tar.bz2
+	tar -C $(THIRD_PARTY) -xjvf $(THIRD_PARTY)/samtools-1.2.tar.bz2 && mv $(THIRD_PARTY)/samtools-1.2 $(THIRD_PARTY)/samtools
+	make -C $(THIRD_PARTY)/samtools
+	ln -s $(THIRD_PARTY)/samtools/samtools $(THIRD_PARTY_BIN)/samtools
+
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
 # Install necessary python modules.                                           #
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
 python: ;
 	mkdir -p $(THIRD_PARTY)/python
-	export PYTHONPATH=$(TOP_DIR):$(THIRD_PARTY)/python:$(THIRD_PARTY)/python/vcf-annotator:$$PYTHONPATH
 	pip install --target $(THIRD_PARTY)/python --install-option="--prefix=" -r $(TOP_DIR)/requirements.txt
 	echo 'Please add the following to your PYTHONPATH.'
 	echo "export PYTHONPATH=$(TOP_DIR):$(THIRD_PARTY)/python:$(THIRD_PARTY)/python/vcf-annotator:$$PYTHONPATH"
+
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
+# Test to make sure everything is installed properly.                         #
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
+test: ;
+	make -C test

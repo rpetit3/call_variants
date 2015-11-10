@@ -5,10 +5,27 @@ from call_variants.tasks import shared
 
 
 def bwa_index(fasta):
-    """ Align reads (mean length < 70bp) against reference genome. """
+    """ Create a BWA index. """
     shared.run_command(
         [BIN['bwa'], 'index', fasta],
     )
+
+
+def samtools_faidx(fasta):
+    """ Index the reference FASTA file. """
+    shared.run_command(
+        [BIN['samtools'], 'faidx', fasta],
+    )
+
+
+def create_sequence_dictionary(reference, output):
+    """ Index the reference FASTA file. """
+    shared.run_command([
+        BIN['java'], '-Xmx8g', '-jar', BIN['picardtools'],
+        'CreateSequenceDictionary',
+        'REFERENCE=' + reference,
+        'OUTPUT=' + output,
+    ])
 
 
 def bwa_mem(fastq, output_sam, num_cpu, reference, completed_file):
