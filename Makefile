@@ -4,7 +4,7 @@ THIRD_PARTY := $(TOP_DIR)/src/third-party
 THIRD_PARTY_PYTHON := $(TOP_DIR)/src/third-party/python
 THIRD_PARTY_BIN := $(TOP_DIR)/bin/third-party
 PYTHONPATH := $(TOP_DIR):$(THIRD_PARTY)/python:$(THIRD_PARTY)/python/vcf-annotator:$$PYTHONPATH
-all: mkdirs config programs python;
+all: mkdirs config programs python add_to_profile;
 
 mkdirs: ;
 	mkdir -p $(THIRD_PARTY)
@@ -66,11 +66,23 @@ samtools: ;
 python: ;
 	mkdir -p $(THIRD_PARTY)/python
 	pip install --target $(THIRD_PARTY)/python --install-option="--prefix=" -r $(TOP_DIR)/requirements.txt
-	echo 'Please add the following to your PYTHONPATH.'
-	echo "export PYTHONPATH=$(TOP_DIR):$(THIRD_PARTY)/python:$(THIRD_PARTY)/python/vcf-annotator:$$PYTHONPATH"
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
 # Test to make sure everything is installed properly.                         #
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
-test: ;
+test: test_make add_to_profile;
+
+test_make: ;
 	make -C test
+
+add_to_profile: ;
+	@echo '*******************************************************************'
+	@echo '*******************************************************************'
+	@echo '*******************************************************************'
+	@echo 'Please add the following to your profile (.profile, .bashrc, .bash_profile, etc...).'
+	@echo ''
+	@echo export PYTHONPATH=${PYTHONPATH};
+	@echo ''
+	@echo '*******************************************************************'
+	@echo '*******************************************************************'
+	@echo '*******************************************************************'
