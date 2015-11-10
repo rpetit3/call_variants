@@ -107,7 +107,7 @@ cd ~/call_variants
 # A little more about the pipeline
 
 ### Step 1: Alignment against your reference
-Reads from the input FASTQ file are aligned to a BWA index of your reference. Depending on the average read length of the input sequences either *bwa mem* (>70bp) or *bwa aln* (<=70bp) is used. In both cases the reads are mapped as single-end reads, as the paired-end status is not always available.
+Reads from the input FASTQ file are aligned to a BWA index of your reference. Depending on the average read length of the input sequences either *bwa mem* (>70bp) or *bwa aln* (<=70bp) is used. In both cases the reads are mapped as single-end reads, as paired-end has not been implemented into *call_variants* yet.
 
 ##### Mean Read Length > 70bp: bwa mem
 ```
