@@ -29,6 +29,9 @@ At the moment, I am assuming all development type programs have been installed (
 sudo apt-get install python-dev
 sudo apt-get install python-pip
 sudo apt-get install python-numpy
+
+sudo apt-get install python-pysqlite2
+OR 
 sudo pip install pysqlite
 ```
 
