@@ -51,7 +51,7 @@ gatk: ;
 	ln -s $(THIRD_PARTY)/gatk/GenomeAnalysisTK.jar $(THIRD_PARTY_BIN)/GenomeAnalysisTK.jar
 
 vcfannotator: ;
-	git clone git@github.com:rpetit3-science/vcf-annotator.git $(THIRD_PARTY)/python/vcf-annotator
+	git clone https://github.com/rpetit3-science/vcf-annotator.git $(THIRD_PARTY)/python/vcf-annotator
 	ln -s $(THIRD_PARTY)/python/vcf-annotator/bin/vcf-annotator $(THIRD_PARTY_BIN)/vcf-annotator
 
 samtools: ;
