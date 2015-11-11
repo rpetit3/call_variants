@@ -96,5 +96,5 @@ test_pipeline_input: ;
 test_call_variants: ;
 	export PYTHONPATH=${PYTHONPATH}; \
 	$(TOP_DIR)/bin/call_variants test_pipeline/test.fastq.gz test_pipeline/test.fasta \
-	                             test_pipeline/test.gb -p 1 --log_times -r 100 -o test_pipeline \
+	                             --genbank test_pipeline/test.gb -p 1 --log_times -r 100 -o test_pipeline \
 	                              || (echo "call_variants failed $$?"; exit 1)
