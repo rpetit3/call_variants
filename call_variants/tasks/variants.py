@@ -223,6 +223,18 @@ def vcf_annotator(filtered_vcf, annotated_vcf, genbank, completed_file):
         raise Exception("vcf-annotator did not complete successfully.")
 
 
+def copy_vcf(filtered_vcf, annotated_vcf, completed_file):
+    """ Annotate called SNPs/InDel. """
+    shared.run_command(
+        ['cp', filtered_vcf, annotated_vcf],
+    )
+
+    if shared.try_to_complete_task(annotated_vcf, completed_file):
+        return True
+    else:
+        raise Exception("Could not copy filtered VCF successfully.")
+
+
 def move_final_vcf(annotated_vcf, compressed_vcf, completed_file):
     """ Move the final VCF to the project root. """
     shared.run_command(

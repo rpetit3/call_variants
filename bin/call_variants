@@ -13,7 +13,7 @@ parser = cmdline.get_argparse(description='Call variants from input FASTQ.')
 parser.add_argument("fastq", metavar="INPUT_FASTQ", help="Input FASTQ file")
 parser.add_argument("reference", metavar="REFERENCE_FASTA",
                     help="Input reference FASTA file.")
-parser.add_argument("genbank", metavar="REFERENCE_GENBANK",
+parser.add_argument("--genbank", metavar="REFERENCE_GENBANK", default='',
                     help="Input reference GenBank file.")
 parser.add_argument("-o", "--output", dest="output", type=str,
                     help="Output directory. (Default: ./)", metavar="STR",
@@ -179,8 +179,11 @@ def vcf_annotator(input_file, completed_file):
     """ Annotate the variants. """
     filtered_vcf = input_file.replace('completed', 'gatk')
     annotated_vcf = completed_file.replace('completed', 'gatk')
-    variants.vcf_annotator(filtered_vcf, annotated_vcf, options.genbank,
-                           completed_file)
+    if options.genbank:
+        variants.vcf_annotator(filtered_vcf, annotated_vcf, options.genbank,
+                               completed_file)
+    else:
+        variants.copy_vcf(filtered_vcf, annotated_vcf, completed_file)
 
 
 @follows(vcf_annotator)

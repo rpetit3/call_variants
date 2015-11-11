@@ -35,8 +35,10 @@ bwa: ;
 	ln -s $(THIRD_PARTY)/bwa/bwa $(THIRD_PARTY_BIN)/bwa
 
 java: ;
-	wget -O $(THIRD_PARTY)/jdk-8u60-linux-x64.tar.gz https://www.dropbox.com/s/g5y2o8x6ce685ud/jdk-8u60-linux-x64.tar.gz?dl=1
-	tar -C $(THIRD_PARTY) -xzvf $(THIRD_PARTY)/jdk-8u60-linux-x64.tar.gz && mv $(THIRD_PARTY)/jdk1.8.0_60 $(THIRD_PARTY)/jdk
+	wget -O $(THIRD_PARTY)/jdk-7u79-linux-x64.tar.gz --no-cookies --no-check-certificate --header \
+	     "Cookie: gpw_e24=http%3A%2F%2Fwww.oracle.com%2F;oraclelicense=accept-securebackup-cookie" \
+	     "http://download.oracle.com/otn-pub/java/jdk/7u79-b15/jdk-7u79-linux-x64.tar.gz"
+	tar -C $(THIRD_PARTY) -xzvf $(THIRD_PARTY)/jdk-7u79-linux-x64.tar.gz && mv $(THIRD_PARTY)/jdk1.7.0_79 $(THIRD_PARTY)/jdk
 	ln -s $(THIRD_PARTY)/jdk/bin/java $(THIRD_PARTY_BIN)/java
 
 picardtools: ;
@@ -45,10 +47,14 @@ picardtools: ;
 	ln -s $(THIRD_PARTY)/picardtools/picard.jar $(THIRD_PARTY_BIN)/picard.jar
 
 gatk: ;
-	mkdir $(THIRD_PARTY)/gatk
-	wget -O $(THIRD_PARTY)/gatk/GenomeAnalysisTK-3.4-46.tar.bz2 https://www.dropbox.com/s/97qv9ybrr3kjgzk/GenomeAnalysisTK-3.4-46.tar.bz2?dl=1
-	tar -C $(THIRD_PARTY)/gatk/ -xjvf $(THIRD_PARTY)/gatk/GenomeAnalysisTK-3.4-46.tar.bz2
-	ln -s $(THIRD_PARTY)/gatk/GenomeAnalysisTK.jar $(THIRD_PARTY_BIN)/GenomeAnalysisTK.jar
+	wget -O $(THIRD_PARTY)/apache-maven-3.3.3-bin.tar.gz http://mirror.cc.columbia.edu/pub/software/apache/maven/maven-3/3.3.3/binaries/apache-maven-3.3.3-bin.tar.gz
+	tar -C $(THIRD_PARTY) -xzvf $(THIRD_PARTY)/apache-maven-3.3.3-bin.tar.gz
+	wget -O $(THIRD_PARTY)/gatk-3.4.tar.gz https://github.com/broadgsa/gatk-protected/archive/3.4.tar.gz
+	tar -C $(THIRD_PARTY) -xzvf $(THIRD_PARTY)/gatk-3.4.tar.gz
+	export JAVA_HOME=$(THIRD_PARTY)/jdk; \
+	$(THIRD_PARTY)/apache-maven-3.3.3/bin/mvn -f $(THIRD_PARTY)/gatk-protected-3.4/pom.xml verify -P\!queue
+	ln -s $(THIRD_PARTY)/gatk-protected-3.4/target/GenomeAnalysisTK.jar $(THIRD_PARTY_BIN)/GenomeAnalysisTK.jar
+
 
 vcfannotator: ;
 	git clone https://github.com/rpetit3-science/vcf-annotator.git $(THIRD_PARTY)/python/vcf-annotator
