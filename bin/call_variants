@@ -106,7 +106,7 @@ def bwa(input_file, completed_file):
            ''.join([options.output, '/', r"variants/completed/sorted.bam"]))
 @time_job(TIME_LOG)
 def add_or_replace_read_groups(input_file, completed_file):
-    """ Filter out reads. """
+    """ Places each read into a read group for GATK processing. """
     input_sam = input_file.replace('completed', 'gatk')
     sorted_bam = completed_file.replace('completed', 'gatk')
     variants.add_or_replace_read_groups(input_sam, sorted_bam, completed_file)
@@ -117,7 +117,7 @@ def add_or_replace_read_groups(input_file, completed_file):
            ''.join([options.output, '/', r"variants/completed/deduped.bam"]))
 @time_job(TIME_LOG)
 def mark_duplicates(input_file, completed_file):
-    """ Build BAM index. """
+    """ Mark identical reads as duplicates for GATK to ignore. """
     sorted_bam = input_file.replace('completed', 'gatk')
     deduped_bam = completed_file.replace('completed', 'gatk')
     variants.mark_duplicates(sorted_bam, deduped_bam, completed_file)
@@ -127,7 +127,7 @@ def mark_duplicates(input_file, completed_file):
 @transform(mark_duplicates, regex(r"(.*).bam"), r"\1.intervals")
 @time_job(TIME_LOG)
 def realigner_target_creator(input_file, completed_file):
-    """ Check Tauqeer's protocol. """
+    """ Create a list of InDel regions to be realigned. """
     deduped_bam = input_file.replace('completed', 'gatk')
     intervals = completed_file.replace('completed', 'gatk')
     variants.realigner_target_creator(deduped_bam, intervals,
@@ -139,7 +139,7 @@ def realigner_target_creator(input_file, completed_file):
            ''.join([options.output, '/', r"variants/completed/realigned.bam"]))
 @time_job(TIME_LOG)
 def indel_realigner(input_file, completed_file):
-    """ Check Tauqeer's protocol. """
+    """ Realign InDel regions. """
     intervals = input_file.replace('completed', 'gatk')
     deduped_bam = intervals.replace('intervals', 'bam')
     realigned_bam = completed_file.replace('completed', 'gatk')
@@ -152,10 +152,11 @@ def indel_realigner(input_file, completed_file):
            ''.join([options.output, '/', r"variants/completed/raw.vcf"]))
 @time_job(TIME_LOG)
 def haplotype_caller(input_file, completed_file):
-    """ Check Tauqeer's protocol. """
+    """ Call variants (SNPs and InDels). """
     realigned_bam = input_file.replace('completed', 'gatk')
     output_vcf = completed_file.replace('completed', 'gatk')
-    variants.haplotype_caller(realigned_bam, output_vcf, options.reference,
+    variants.haplotype_caller(realigned_bam, output_vcf,
+                              str(options.processors), options.reference,
                               completed_file)
 
 
@@ -164,7 +165,7 @@ def haplotype_caller(input_file, completed_file):
            ''.join([options.output, '/', r"variants/completed/filtered.vcf"]))
 @time_job(TIME_LOG)
 def variant_filtration(input_file, completed_file):
-    """ Check Tauqeer's protocol. """
+    """ Apply filters to the input VCF. """
     input_vcf = input_file.replace('completed', 'gatk')
     filtered_vcf = completed_file.replace('completed', 'gatk')
     variants.variant_filtration(input_vcf, filtered_vcf, options.reference,

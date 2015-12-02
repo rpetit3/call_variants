@@ -26,7 +26,7 @@ clean: ;
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
 # Build all the programs required to run the simulations.                     #
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
-programs: mkdirs bwa java picardtools gatk vcfannotator samtools;
+programs: mkdirs bwa java picardtools maven gatk vcfannotator samtools;
 
 bwa: ;
 	wget -O $(THIRD_PARTY)/bwa-0.7.12.tar.gz https://github.com/lh3/bwa/archive/0.7.12.tar.gz
@@ -46,14 +46,16 @@ picardtools: ;
 	unzip $(THIRD_PARTY)/picard-tools-1.140.zip -d $(THIRD_PARTY)/ && mv $(THIRD_PARTY)/picard-tools-1.140 $(THIRD_PARTY)/picardtools
 	ln -s $(THIRD_PARTY)/picardtools/picard.jar $(THIRD_PARTY_BIN)/picard.jar
 
-gatk: ;
+maven: ;
 	wget -O $(THIRD_PARTY)/apache-maven-3.3.3-bin.tar.gz http://mirror.cc.columbia.edu/pub/software/apache/maven/maven-3/3.3.3/binaries/apache-maven-3.3.3-bin.tar.gz
 	tar -C $(THIRD_PARTY) -xzvf $(THIRD_PARTY)/apache-maven-3.3.3-bin.tar.gz
-	wget -O $(THIRD_PARTY)/gatk-3.5.tar.gz https://github.com/broadgsa/gatk/archive/3.5.tar.gz
-	tar -C $(THIRD_PARTY) -xzvf $(THIRD_PARTY)/gatk-3.4.tar.gz
+
+gatk: ;
+	wget -O $(THIRD_PARTY)/gatk-3.5.tar.gz https://github.com/broadgsa/gatk-protected/archive/3.5.tar.gz
+	tar -C $(THIRD_PARTY) -xzvf $(THIRD_PARTY)/gatk-3.5.tar.gz
 	export JAVA_HOME=$(THIRD_PARTY)/jdk; \
-	$(THIRD_PARTY)/apache-maven-3.3.3/bin/mvn -f $(THIRD_PARTY)/gatk-protected-3.4/pom.xml verify -P\!queue
-	ln -s $(THIRD_PARTY)/gatk-protected-3.4/target/GenomeAnalysisTK.jar $(THIRD_PARTY_BIN)/GenomeAnalysisTK.jar
+	$(THIRD_PARTY)/apache-maven-3.3.3/bin/mvn -f $(THIRD_PARTY)/gatk-protected-3.5/pom.xml verify -P\!queue
+	ln -s $(THIRD_PARTY)/gatk-protected-3.5/target/GenomeAnalysisTK.jar $(THIRD_PARTY_BIN)/GenomeAnalysisTK.jar
 
 vcfannotator: ;
 	git clone https://github.com/rpetit3-science/vcf-annotator.git $(THIRD_PARTY)/python/vcf-annotator
@@ -70,7 +72,7 @@ samtools: ;
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
 python: ;
 	mkdir -p $(THIRD_PARTY)/python
-	pip install --target $(THIRD_PARTY)/python --install-option="--prefix=" -r $(TOP_DIR)/requirements.txt
+	/usr/bin/pip install --target $(THIRD_PARTY)/python --install-option="--prefix=" -r $(TOP_DIR)/requirements.txt
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
 # Test to make sure everything is installed properly.                         #

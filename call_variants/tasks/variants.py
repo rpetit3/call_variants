@@ -161,7 +161,8 @@ def indel_realigner(intervals, deduped_bam, realigned_bam, reference,
         raise Exception("IndelRealigner did not complete successfully.")
 
 
-def haplotype_caller(realigned_bam, output_vcf, reference, completed_file):
+def haplotype_caller(realigned_bam, output_vcf, num_cpu, reference,
+                     completed_file):
     """
     GATK Best Practices - Call Variants.
 
@@ -177,6 +178,7 @@ def haplotype_caller(realigned_bam, output_vcf, reference, completed_file):
         '-stand_call_conf', '30.0',
         '-stand_emit_conf', '10.0',
         '-rf', 'BadCigar',
+        '-nct', num_cpu
     ])
     if shared.try_to_complete_task(output_vcf, completed_file):
         return True
@@ -185,7 +187,7 @@ def haplotype_caller(realigned_bam, output_vcf, reference, completed_file):
 
 
 def variant_filtration(input_vcf, filtered_vcf, reference, completed_file):
-    """ See Tauqeer's protocol. """
+    """ Apply filters to the input VCF. """
     shared.run_command([
         BIN['java'], '-Xmx8g', '-jar', BIN['gatk'],
         '-T', 'VariantFiltration',
