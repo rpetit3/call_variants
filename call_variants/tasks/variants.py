@@ -186,8 +186,7 @@ def haplotype_caller(realigned_bam, output_vcf, num_cpu, reference,
         raise Exception("HaplotypeCaller did not complete successfully.")
 
 
-def variant_filtration(input_vcf, filtered_vcf, num_cpu, reference,
-                       completed_file):
+def variant_filtration(input_vcf, filtered_vcf, reference, completed_file):
     """ Apply filters to the input VCF. """
     shared.run_command([
         BIN['java'], '-Xmx8g', '-jar', BIN['gatk'],
@@ -202,8 +201,7 @@ def variant_filtration(input_vcf, filtered_vcf, num_cpu, reference,
         '--filterExpression', 'DP > 9 && AF >= 0.95',
         '--filterName', 'SuperPass',
         '--filterExpression', 'GQ < 20',
-        '--filterName', 'LowGQ',
-        '-nct', num_cpu
+        '--filterName', 'LowGQ'
     ])
 
     if shared.try_to_complete_task(filtered_vcf, completed_file):
