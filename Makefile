@@ -72,7 +72,7 @@ samtools: ;
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
 python: ;
 	mkdir -p $(THIRD_PARTY)/python
-	/usr/bin/pip install --target $(THIRD_PARTY)/python --install-option="--prefix=" -r $(TOP_DIR)/requirements.txt
+	pip install --target $(THIRD_PARTY)/python --install-option="--prefix=" -r $(TOP_DIR)/requirements.txt
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
 # Test to make sure everything is installed properly.                         #
