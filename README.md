@@ -1,3 +1,5 @@
+# *THIS IS NO LONGER SUPPORTED*
+
 # Overview
 *call_variants*, as the name might suggest, is a variant (SNP and InDel) calling pipeline for bacterial sequences. With input FASTQ sequences and a reference (FASTA & GenBank) you can quickly determine the variants. *call_variants* makes use of a few programs (listed below), but the variants are determined by [GATK](https://www.broadinstitute.org/gatk/) developed by the [Broad Institute](http://www.broadinstitute.org). We have based our implementation of this pipeline on the [GATK Best Practices](https://www.broadinstitute.org/gatk/guide/best-practices) workflows, with the exceptions of a few modifications (base recalibration).
 
